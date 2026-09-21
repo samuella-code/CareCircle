@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Activity, AlertTriangle, Bell, CalendarDays, Check, CheckCircle2, ChevronRight, ClipboardList, HeartPulse, Home, Menu, MessageCircle, Mic, Phone, Pill, Plus, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react'
+import { Activity, AlertTriangle, Bell, CalendarDays, Check, CheckCircle2, ChevronRight, ClipboardList, HeartPulse, Home, LogOut, Menu, MessageCircle, Mic, Phone, Pill, Plus, Send, ShieldCheck, Sparkles, UserRound, Users, X } from 'lucide-react'
 
 type Mode = 'senior' | 'caregiver'
+type Session = { role: Mode; name: string }
 
 const initialMeds = [
   { id: 1, name: 'Amlodipine', detail: '5 mg · After breakfast', time: '8:00 AM', taken: true },
@@ -48,7 +49,8 @@ const tasksExample = [
 function Logo() { return <div className="logo"><span><HeartPulse size={22}/></span><b>CareCircle</b></div> }
 
 function App() {
-  const [mode, setMode] = useState<Mode>('senior')
+  const [session, setSession] = useSavedState<Session|null>('carecircle-session', null)
+  const mode = session?.role ?? 'senior'
   const [voice, setVoice] = useState(false)
   const [help, setHelp] = useState(false)
   const [checkin, setCheckin] = useState(false)
@@ -61,14 +63,22 @@ function App() {
   const notify = (message:string) => { setToast(message); window.setTimeout(()=>setToast(''), 2600) }
   const markTaken = (id:number) => { setMeds(list=>list.map(m=>m.id===id?{...m,taken:true}:m)); notify('Medication marked as taken') }
   const sendHelp = (contact:string) => { setAlerts(list=>[{id:Date.now(),contact,time:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),resolved:false},...list]); setHelp(false); notify(`${contact} has been alerted`) }
+  if (!session) return <AuthScreen onSignIn={setSession}/>
   return <div className="app">
-    <header><Logo/><nav aria-label="View switcher"><button className={mode==='senior'?'active':''} onClick={()=>setMode('senior')}>Senior view</button><button className={mode==='caregiver'?'active':''} onClick={()=>setMode('caregiver')}>Family view</button></nav><button className="icon-btn" aria-label="Notifications"><Bell size={22}/><i/></button></header>
+    <header><Logo/><div className="signed-in"><span><small>Signed in as</small><b>{session.name} · {mode==='senior'?'Senior':'Family caregiver'}</b></span><button className="signout" onClick={()=>setSession(null)}><LogOut/> Sign out</button></div><button className="icon-btn" aria-label="Notifications" onClick={()=>mode==='caregiver'&&alerts.some(a=>!a.resolved)&&notify(`${alerts.filter(a=>!a.resolved).length} urgent alert waiting`)}><Bell size={22}/>{alerts.some(a=>!a.resolved)&&<i/>}</button></header>
     {mode === 'senior' ? <Senior onVoice={()=>setVoice(true)} onHelp={()=>setHelp(true)} onCheckin={()=>setCheckin(true)} checked={checked} meds={meds} markTaken={markTaken}/> : <Caregiver meds={meds} tasks={tasks} setTasks={setTasks} checked={checked} mood={mood} alerts={alerts} setAlerts={setAlerts} notify={notify}/>} 
     {voice && <VoiceAssistant meds={meds} onClose={()=>setVoice(false)}/>} 
     {checkin && <Checkin onClose={()=>setCheckin(false)} onComplete={(feeling)=>{setMood(feeling);setChecked(true);setCheckin(false);notify('Daily check-in shared with your family')}}/>}
     {help && <Modal onClose={()=>setHelp(false)}><div className="help"><span className="danger-icon"><Phone/></span><small>HELP REQUEST</small><h2>Who should we contact?</h2><p>Choose a trusted contact. CareCircle will create an urgent family alert.</p><button className="contact" onClick={()=>sendHelp('Amara')}><span>AO</span><div><b>Amara Okafor</b><small>Daughter · Primary caregiver</small></div><ChevronRight/></button><button className="contact" onClick={()=>sendHelp('David')}><span>DO</span><div><b>David Okafor</b><small>Son</small></div><ChevronRight/></button><a className="emergency" href="tel:112"><Phone size={18}/> Call emergency services (112)</a><small className="safety-copy">Calls use your phone service. CareCircle cannot guarantee emergency response.</small></div></Modal>}
     {toast && <div className="toast" role="status"><CheckCircle2/>{toast}</div>}
   </div>
+}
+
+function AuthScreen({onSignIn}:{onSignIn:(s:Session)=>void}) {
+  const [role,setRole]=useState<Mode>('senior'); const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [error,setError]=useState('')
+  const submit=(e:React.FormEvent)=>{e.preventDefault(); if(!email||!password){setError('Please enter your email and password.');return} onSignIn({role,name:role==='senior'?'Grace':'Amara'})}
+  const demo=(selected:Mode)=>onSignIn({role:selected,name:selected==='senior'?'Grace':'Amara'})
+  return <main className="auth-page"><section className="auth-intro"><Logo/><div><span className="eyebrow light">INDEPENDENT LIVING, CONNECTED CARE</span><h1>Care that keeps everyone close.</h1><p>Simple daily support for older adults. Peace of mind and clear coordination for the people who care for them.</p></div><div className="trust-row"><ShieldCheck/><span><b>Private by design</b><small>You control who sees your care information.</small></span></div></section><section className="auth-panel"><form onSubmit={submit}><span className="eyebrow">WELCOME TO CARECIRCLE</span><h2>Sign in to your circle</h2><p>Choose how you use CareCircle, then enter your details.</p><div className="role-picker"><button type="button" className={role==='senior'?'selected':''} onClick={()=>setRole('senior')}><UserRound/><b>I am a senior</b><small>My care and daily support</small></button><button type="button" className={role==='caregiver'?'selected':''} onClick={()=>setRole('caregiver')}><Users/><b>I am family</b><small>Coordinate someone’s care</small></button></div><label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password"/></label>{error&&<p className="form-error">{error}</p>}<button className="login-button">Sign in securely <ChevronRight/></button><div className="demo-login"><span>OR TRY THE WORKING DEMO</span><button type="button" onClick={()=>demo('senior')}>Enter as Grace (Senior)</button><button type="button" onClick={()=>demo('caregiver')}>Enter as Amara (Family)</button></div><p className="demo-note">Demo sign-in uses sample data on this device. Production accounts require the secure backend described in the README.</p></form></section></main>
 }
 
 function Senior({onVoice,onHelp,onCheckin,checked,meds,markTaken}:{onVoice:()=>void,onHelp:()=>void,onCheckin:()=>void,checked:boolean,meds:Medicine[],markTaken:(id:number)=>void}) {
@@ -95,9 +105,10 @@ function Caregiver({meds,tasks,setTasks,checked,mood,alerts,setAlerts,notify}:{m
     </div>{taskModal&&<TaskForm onClose={()=>setTaskModal(false)} onAdd={(task)=>{setTasks(list=>[...list,{...task,id:Date.now(),done:false}]);setTaskModal(false);notify('Care task added')}}/>}</main> }
 
 function VoiceAssistant({meds,onClose}:{meds:Medicine[],onClose:()=>void}) {
-  const [answer,setAnswer]=useState('Tap a question below or speak it aloud.')
-  const respond=(question:string)=>{let response='I can help with medicines, appointments, family calls, and daily check-ins.'; if(question.includes('medicine')) response=`You have ${meds.filter(m=>!m.taken).length} medicines remaining today. ${meds.find(m=>!m.taken)?.name??'All medicines are complete'}.`; if(question.includes('plan')||question.includes('appointment')) response='You have physiotherapy with Dr. Bello at 3:30 PM.'; setAnswer(response); if('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(response))}
-  return <Modal onClose={onClose}><div className="voice"><div className="voice-ring"><Mic size={38}/></div><small>CARECIRCLE ASSISTANT</small><h2>How can I help you, Grace?</h2><p className="assistant-answer" aria-live="polite">{answer}</p><div className="quick-questions"><button onClick={()=>respond('medicine')}>What medicine is next?</button><button onClick={()=>respond('appointment')}>What is planned today?</button></div><button className="secondary" onClick={onClose}>Close assistant</button></div></Modal>
+  const [answer,setAnswer]=useState('Tap a question below or type your own question.')
+  const [question,setQuestion]=useState('')
+  const respond=(raw:string)=>{const question=raw.toLowerCase();let response='I can help with today’s medicines, appointments, check-ins, family calls, and getting help. For medical advice, please contact a qualified professional.';if(question.includes('medicine')||question.includes('medication')||question.includes('drug'))response=meds.some(m=>!m.taken)?`You have ${meds.filter(m=>!m.taken).length} medicines remaining today. Your next one is ${meds.find(m=>!m.taken)?.name} at ${meds.find(m=>!m.taken)?.time}.`:'All of today’s medicines are marked as taken.';else if(question.includes('plan')||question.includes('appointment')||question.includes('today'))response='You have physiotherapy with Dr. Bello at the Wellness Centre at 3:30 PM.';else if(question.includes('help')||question.includes('emergency'))response='Close this assistant and tap the red “I need help” button to alert family or call emergency services.';else if(question.includes('family')||question.includes('amara')||question.includes('david'))response='Amara and David are in your trusted family circle. Use the call buttons on your home screen to contact them.';setAnswer(response);if('speechSynthesis' in window){window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(response))}}
+  return <Modal onClose={onClose}><div className="voice"><div className="voice-ring"><Mic size={38}/></div><small>CARECIRCLE ASSISTANT · DEMO AI</small><h2>How can I help you, Grace?</h2><p className="assistant-answer" aria-live="polite">{answer}</p><form className="assistant-form" onSubmit={e=>{e.preventDefault();if(question.trim()){respond(question);setQuestion('')}}}><input value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Ask about medicine or appointments" aria-label="Ask CareCircle"/><button aria-label="Send question"><Send/></button></form><div className="quick-questions"><button onClick={()=>respond('medicine')}>What medicine is next?</button><button onClick={()=>respond('appointment')}>What is planned today?</button></div><small className="ai-note">This offline demo uses safe, pre-programmed care answers. Connect an approved AI service and secure backend for open-ended conversations.</small><button className="secondary" onClick={onClose}>Close assistant</button></div></Modal>
 }
 
 function Checkin({onClose,onComplete}:{onClose:()=>void,onComplete:(mood:string)=>void}) { return <Modal onClose={onClose}><div className="form-modal"><span className="eyebrow">DAILY CHECK-IN</span><h2>How are you feeling?</h2><p>Choose the answer that feels closest right now.</p><div className="moods">{['Great','Good','Not well'].map(m=><button key={m} onClick={()=>onComplete(m)}>{m==='Great'?'😊':m==='Good'?'🙂':'😟'}<b>{m}</b></button>)}</div></div></Modal> }
