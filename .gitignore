@@ -3,3 +3,6 @@ dist
 *.tsbuildinfo
 .env
 .DS_Store
+backend/.venv/
+backend/*.db
+backend/__pycache__/
