@@ -7,14 +7,16 @@ CareCircle is an accessible care-coordination MVP for adults aged 65+ and their 
 ## Included in this MVP
 
 - Senior-friendly home screen with large, high-contrast controls
-- Simulated voice assistant interaction
-- Medication and appointment schedule
-- Daily wellbeing check-in
-- Help-request contact flow
+- Voice assistant with spoken schedule and medication answers
+- Persistent medication completion and appointment schedule
+- Daily wellbeing check-in with mood sharing
+- Help requests that appear as resolvable caregiver alerts
 - Trusted-family quick calling
-- Caregiver overview, medication status, care tasks, and activity history
+- Caregiver overview with live medication and check-in status
+- Add, assign, complete, and persist family care tasks
 - Responsive mobile and desktop layouts
-- Synthetic demonstration data only
+- Browser storage so demo changes survive refreshes
+- Synthetic demonstration contacts and health data only
 
 ## Run locally
 
@@ -24,6 +26,8 @@ npm run dev
 ```
 
 Open the URL shown by Vite. Use the **Senior view / Family view** switch at the top to test both experiences.
+
+No API keys are needed for the current local-first MVP. Clear the site's browser storage to reset the demo.
 
 ## Production build
 
