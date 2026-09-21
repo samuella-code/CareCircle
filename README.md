@@ -29,20 +29,30 @@ Open the URL shown by Vite and choose a role on the sign-in screen.
 
 No API keys are needed for the current local-first MVP. Clear the site's browser storage to reset the demo.
 
-## Sign-in and demo journey
+## Full-stack sign-in and care-circle journey
 
-The app opens on a role-based sign-in screen. For a presentation, use either demo button:
+CareCircle now includes a FastAPI backend with password hashing, signed sessions, SQLite storage, protected care records, and role-based Senior/Family accounts.
 
-- **Enter as Grace (Senior):** medication reminders, daily check-in, CareCircle assistant, family calls, and help requests.
-- **Enter as Amara (Family):** medication status, check-in status, urgent help alerts, and assignable care tasks.
+- A senior creates an account and receives a private six-character invitation code under **My Circle**.
+- A family caregiver creates a caregiver account and enters that code to join the senior's circle.
+- Medication updates, check-ins, help alerts, and tasks are saved in the backend database and appear for linked accounts.
 
-Actions are shared between both roles on the same browser. For example, request help as Grace, sign out, then enter as Amara to see and resolve the alert.
+Run the backend before starting the frontend:
 
-The current sign-in and data store are an interactive local prototype, not production authentication. Real multi-device accounts require the planned API, encrypted database, verified contact invitations, role permissions, and notification service.
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export CARECIRCLE_SECRET="replace-with-a-long-random-secret"
+uvicorn main:app --reload --port 8000
+```
+
+In a second terminal, run `npm run dev`. The frontend uses `http://localhost:8000` by default. For a deployed API, set `VITE_API_URL` before building.
 
 ## What the current AI does
 
-The CareCircle assistant accepts typed questions about Grace's medicines, appointments, trusted family, and help flow. It reads answers aloud when browser speech synthesis is available. It intentionally uses controlled answers in this offline health demo. Connecting a general AI model requires a protected server-side API key, consent rules, audit logging, and medical-safety guardrails; never put an AI API key in frontend code.
+The CareCircle assistant sends authenticated questions to the backend and answers from the signed-in senior's care data. It reads answers aloud when browser speech synthesis is available. It intentionally uses controlled health-safe answers. A later provider integration can be added server-side without exposing an AI API key in frontend code.
 
 ## Production build
 
