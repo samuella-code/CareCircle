@@ -25,9 +25,24 @@ npm install
 npm run dev
 ```
 
-Open the URL shown by Vite. Use the **Senior view / Family view** switch at the top to test both experiences.
+Open the URL shown by Vite and choose a role on the sign-in screen.
 
 No API keys are needed for the current local-first MVP. Clear the site's browser storage to reset the demo.
+
+## Sign-in and demo journey
+
+The app opens on a role-based sign-in screen. For a presentation, use either demo button:
+
+- **Enter as Grace (Senior):** medication reminders, daily check-in, CareCircle assistant, family calls, and help requests.
+- **Enter as Amara (Family):** medication status, check-in status, urgent help alerts, and assignable care tasks.
+
+Actions are shared between both roles on the same browser. For example, request help as Grace, sign out, then enter as Amara to see and resolve the alert.
+
+The current sign-in and data store are an interactive local prototype, not production authentication. Real multi-device accounts require the planned API, encrypted database, verified contact invitations, role permissions, and notification service.
+
+## What the current AI does
+
+The CareCircle assistant accepts typed questions about Grace's medicines, appointments, trusted family, and help flow. It reads answers aloud when browser speech synthesis is available. It intentionally uses controlled answers in this offline health demo. Connecting a general AI model requires a protected server-side API key, consent rules, audit logging, and medical-safety guardrails; never put an AI API key in frontend code.
 
 ## Production build
 
